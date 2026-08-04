@@ -204,32 +204,36 @@ function getHostname(value) {
   }
 }
 
-function setTrackerMessage(text) {
-  trackerPromptEl.innerHTML = "";
+function trackerRow(text) {
+  const row = document.createElement("div");
+  row.className = "tracker-row";
   const icon = document.createElement("span");
   icon.className = "tracker-icon";
   icon.innerHTML = ICONS.pin;
-  trackerPromptEl.appendChild(icon);
+  row.appendChild(icon);
   const span = document.createElement("span");
   span.textContent = text;
-  trackerPromptEl.appendChild(span);
+  row.appendChild(span);
+  return row;
+}
+
+function setTrackerMessage(text) {
+  trackerPromptEl.innerHTML = "";
+  trackerPromptEl.appendChild(trackerRow(text));
 }
 
 function renderTrackerPrompt(hostname, apps, { afterFill }) {
   trackerPromptEl.innerHTML = "";
+  trackerPromptEl.appendChild(
+    trackerRow(afterFill ? `Track ${hostname}?` : `This looks like an application page — track ${hostname}?`)
+  );
 
-  const icon = document.createElement("span");
-  icon.className = "tracker-icon";
-  icon.innerHTML = ICONS.pin;
-  trackerPromptEl.appendChild(icon);
-
-  const text = document.createElement("span");
-  text.textContent = afterFill ? `Track ${hostname}? ` : `This looks like an application page — track ${hostname}? `;
-  trackerPromptEl.appendChild(text);
+  const actions = document.createElement("div");
+  actions.className = "tracker-actions";
 
   const addBtn = document.createElement("button");
   addBtn.type = "button";
-  addBtn.className = "draft-btn";
+  addBtn.className = "secondary";
   addBtn.textContent = "Add to Tracker";
   addBtn.addEventListener("click", async () => {
     const app = emptyApplication({
@@ -242,16 +246,18 @@ function renderTrackerPrompt(hostname, apps, { afterFill }) {
     await saveApplications(apps);
     setTrackerMessage(`Added ${app.school} to your tracker.`);
   });
-  trackerPromptEl.appendChild(addBtn);
+  actions.appendChild(addBtn);
 
   const dismissBtn = document.createElement("button");
   dismissBtn.type = "button";
-  dismissBtn.className = "link-btn";
+  dismissBtn.className = "ghost";
   dismissBtn.textContent = "Dismiss";
   dismissBtn.addEventListener("click", () => {
     trackerPromptEl.innerHTML = "";
   });
-  trackerPromptEl.appendChild(dismissBtn);
+  actions.appendChild(dismissBtn);
+
+  trackerPromptEl.appendChild(actions);
 }
 
 // afterFill=true: called right after a successful Fill (updates/creates with "in progress").
@@ -306,6 +312,7 @@ async function fillApproved() {
 document.getElementById("scan-btn").addEventListener("click", scan);
 document.getElementById("fill-btn").addEventListener("click", fillApproved);
 document.getElementById("open-options").addEventListener("click", () => chrome.runtime.openOptionsPage());
+document.getElementById("popup-year").textContent = String(new Date().getFullYear());
 
 (async function detectOnOpen() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });

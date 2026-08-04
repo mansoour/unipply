@@ -60,13 +60,24 @@ export function computeApplicationProgress(app) {
   return Math.round((done / items.length) * 100);
 }
 
-// Cleans a browser tab title into a plausible school name: takes the first
-// segment before a common title separator, falls back to hostname if the
-// title is missing or the cleaned segment looks unreasonable.
+// Cleans a browser tab title into a plausible school name. Titles are split
+// on common separators (e.g. "Application form | University of Strathclyde
+// ISC") and, since either side could be the school name depending on the
+// site, we prefer whichever segment actually looks like an institution name
+// — falling back to the last segment (the more common "Page | Site" order),
+// then to the hostname if nothing usable is found.
+const INSTITUTION_HINT = /university|college|institute|academy|school of/i;
+
 export function guessSchoolName(title, hostname) {
   if (title) {
-    const segment = title.split(/\s[|:–—]\s|::/)[0].trim();
-    if (segment && segment.length <= 60) return segment;
+    const segments = title
+      .split(/\s[|:–—]\s|::/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (segments.length) {
+      const best = segments.find((s) => INSTITUTION_HINT.test(s)) || segments[segments.length - 1];
+      if (best && best.length <= 60) return best;
+    }
   }
   return hostname || "";
 }

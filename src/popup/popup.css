@@ -52,6 +52,21 @@ header {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.popup-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  display: block;
 }
 
 h1 {
@@ -166,18 +181,23 @@ select,
   cursor: pointer;
 }
 
-.tracker-prompt {
-  font-size: 12px;
+.tracker-prompt:empty {
+  display: none;
+}
+
+.tracker-prompt:not(:empty) {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  margin: 8px 0;
+  background: var(--bg-elevated);
+}
+
+.tracker-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
-  min-height: 0;
-  margin: 4px 0;
-}
-
-.tracker-prompt:empty {
-  display: none;
+  font-size: 12px;
 }
 
 .tracker-icon {
@@ -193,9 +213,55 @@ select,
   height: 100%;
 }
 
+.tracker-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.tracker-actions button {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.tracker-actions button.secondary {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border: 1px solid var(--accent);
+  font-weight: 600;
+}
+
+.tracker-actions button.ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
 .disclaimer {
   font-size: 11px;
   color: var(--text-muted);
   text-align: center;
   margin-top: 6px;
+}
+
+.app-footer {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.app-footer a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.app-footer a:hover {
+  text-decoration: underline;
 }

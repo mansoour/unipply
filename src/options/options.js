@@ -301,6 +301,12 @@ function renderApplicationCard(app, index, onRemove) {
   header.appendChild(removeBtn);
   card.appendChild(header);
 
+  const addedNote = document.createElement("p");
+  addedNote.className = "last-filled-note";
+  addedNote.style.marginBottom = "10px";
+  addedNote.textContent = `Added: ${new Date(app.createdAt).toLocaleString()}`;
+  card.appendChild(addedNote);
+
   function touch() {
     app.updatedAt = new Date().toISOString();
     scheduleApplicationsSave();
@@ -410,11 +416,6 @@ function renderApplicationCard(app, index, onRemove) {
 
   renderChecklistSection(card, app, "checklist", "Document Checklist", touch);
   renderChecklistSection(card, app, "appChecklist", "Application Checklist", touch);
-
-  const addedNote = document.createElement("p");
-  addedNote.className = "last-filled-note";
-  addedNote.textContent = `Added: ${new Date(app.createdAt).toLocaleString()}`;
-  card.appendChild(addedNote);
 
   if (app.lastFilledAt) {
     const lastFilled = document.createElement("p");
@@ -699,6 +700,8 @@ function renderNav() {
 }
 
 async function init() {
+  document.getElementById("app-year").textContent = String(new Date().getFullYear());
+
   profile = await getProfile();
   settings = await getSettings();
   applications = await getApplications();

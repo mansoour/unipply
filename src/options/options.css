@@ -168,6 +168,25 @@ body {
   color: var(--accent);
 }
 
+.sidebar-footer {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+.sidebar-footer a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.sidebar-footer a:hover {
+  text-decoration: underline;
+}
+
 .panel {
   flex: 1;
   padding: 32px 36px;
