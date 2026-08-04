@@ -2,9 +2,24 @@ import { scanFormFields } from "../content/scanner.js";
 import { fillFields } from "../content/filler.js";
 import { matchFieldsLocally, flattenProfile } from "../profile/matcher-fallback.js";
 import { getProfile, getApplications, saveApplications } from "../profile/storage.js";
+import { PROFILE_GROUPS } from "../profile/schema.js";
 import { emptyApplication, statusLabel, guessSchoolName } from "../applications/schema.js";
 import { isLikelyAdmissionPage } from "../applications/detection.js";
 import { ICONS } from "../shared/icons.js";
+
+// Repeatable profile groups (Education, Experience, etc.) — a profileKey like
+// "experience.0.organization" pointing into one of these is only safe to
+// auto-fill into ONE page field. If a second, different field also resolves
+// to that exact same key (e.g. a form with "Employer 1" / "Employer 2"
+// blocks but only one saved entry to match against), filling both would
+// silently duplicate one job's info into what's meant to be a second entry.
+const REPEATABLE_GROUP_KEYS = new Set(PROFILE_GROUPS.filter((g) => g.repeatable).map((g) => g.key));
+
+function isRepeatableEntryKey(profileKey) {
+  if (!profileKey) return false;
+  const [groupKey, indexPart] = profileKey.split(".");
+  return REPEATABLE_GROUP_KEYS.has(groupKey) && /^\d+$/.test(indexPart);
+}
 
 let currentTabId = null;
 let currentTabUrl = null;
@@ -56,7 +71,13 @@ function renderRows() {
     label.textContent = fieldDisplayName(row.field);
     header.appendChild(label);
 
-    if (row.confidence) {
+    if (row.duplicateWarning) {
+      const warning = document.createElement("span");
+      warning.className = "confidence low";
+      warning.title = "Another field on this page already matched the same saved entry — pick a different one below, or leave blank.";
+      warning.textContent = "duplicate?";
+      header.appendChild(warning);
+    } else if (row.confidence) {
       const badge = document.createElement("span");
       badge.className = "confidence" + (row.confidence < 60 ? " low" : "");
       badge.textContent = `${row.confidence}%`;
@@ -189,6 +210,17 @@ async function scan() {
       include: Boolean(m),
     };
   });
+
+  const seenRepeatableKeys = new Set();
+  for (const row of rows) {
+    if (!isRepeatableEntryKey(row.profileKey)) continue;
+    if (seenRepeatableKeys.has(row.profileKey)) {
+      row.include = false;
+      row.duplicateWarning = true;
+    } else {
+      seenRepeatableKeys.add(row.profileKey);
+    }
+  }
 
   renderRows();
   fillBtn.disabled = false;

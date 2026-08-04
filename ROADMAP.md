@@ -70,6 +70,15 @@ Also spotted: additional **Document Checklist** default items worth adding —
 **Passport** and **Certificate** (alongside the existing Transcripts / Recommendation Letters /
 Statement of Purpose / Test Scores).
 
+More real-world fields spotted, likely belonging in Personal Information / a new Passport &
+Residency group:
+- Country of nationality
+- Country of birth
+- Country of permanent residence (with the "born there, hold a passport, or indefinite visa"
+  qualifier some forms show as help text)
+- Whether you've lived outside that country in the last 3 years
+- Passport number, date of issue, date of expiry, place of issuance
+
 ### Tracking & status
 - Badge color coding by status (e.g. green = submitted/accepted, gray = not started) on the
   toolbar icon.
@@ -89,6 +98,14 @@ Statement of Purpose / Test Scores).
   progress or context.
 - Known-ATS-platform presets (Slate, Liaison CAS, Embark, ApplyWeb, Power Apps/Power Pages) for
   faster, more reliable matching on the platforms that show up again and again.
+- **Repeated field blocks (e.g. "Employer 1" / "Employer 2") get smarter, not just safer.** Today
+  (fixed): if a form has two Employment blocks but the profile only has one saved entry, both
+  fields used to silently get filled with the same job — now the popup only auto-fills the first
+  match and flags the second as "duplicate?", left unchecked for you to manually pick a different
+  saved entry (or leave blank). The real fix is teaching the matcher to recognize repeated field
+  groups on the page (by DOM position/nearby text like "Employer 1"/"Employer 2") and map them in
+  order to `experience.0`, `experience.1`, etc. automatically — bigger change, same idea would
+  apply to Education, Test Scores, and References too.
 
 ### AI features
 - "Explain this question" — plain-language explainer for confusing application prompts (from the
