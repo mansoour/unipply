@@ -35,4 +35,6 @@ export const ICONS = {
   edit: svg(
     '<path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"/><path d="M13.5 7.5l3 3"/>'
   ),
+  chevronDown: svg('<path d="M6 9l6 6 6-6"/>'),
+  externalLink: svg('<path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M19 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h6"/>'),
 };

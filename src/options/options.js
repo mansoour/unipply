@@ -148,6 +148,21 @@ function renderNonRepeatableGroup(group, container) {
   );
 }
 
+// Small chevron toggle that collapses/expands the entry card it's placed in
+// (everything in the card except the header row itself).
+function collapseToggleButton(entryEl) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "collapse-toggle";
+  btn.title = "Minimize";
+  btn.innerHTML = ICONS.chevronDown;
+  btn.addEventListener("click", () => {
+    entryEl.classList.toggle("collapsed");
+    btn.title = entryEl.classList.contains("collapsed") ? "Expand" : "Minimize";
+  });
+  return btn;
+}
+
 function renderRepeatableGroup(group, container) {
   if (!Array.isArray(profile[group.key])) profile[group.key] = [];
   const entries = profile[group.key];
@@ -167,6 +182,7 @@ function renderRepeatableGroup(group, container) {
 
       const header = document.createElement("div");
       header.className = "entry-header";
+      header.appendChild(collapseToggleButton(entryEl));
       const h3 = document.createElement("h3");
       h3.textContent = `${group.label} #${index + 1}`;
       header.appendChild(h3);
@@ -289,6 +305,7 @@ function renderApplicationCard(app, index, onRemove) {
 
   const header = document.createElement("div");
   header.className = "entry-header";
+  header.appendChild(collapseToggleButton(card));
 
   const h3 = document.createElement("h3");
   h3.textContent = app.school || `Application #${index + 1}`;
@@ -299,6 +316,21 @@ function renderApplicationCard(app, index, onRemove) {
   badge.dataset.status = app.status;
   badge.textContent = statusLabel(app.status);
   header.appendChild(badge);
+
+  const openPortalBtn = document.createElement("button");
+  openPortalBtn.type = "button";
+  openPortalBtn.className = "open-portal-btn";
+  openPortalBtn.title = "Open the application portal";
+  openPortalBtn.innerHTML = `${ICONS.externalLink}<span>Open Portal</span>`;
+  openPortalBtn.addEventListener("click", () => {
+    if (!app.portalUrl) {
+      alert("Add a Portal URL / Domain first.");
+      return;
+    }
+    const url = app.portalUrl.includes("://") ? app.portalUrl : `https://${app.portalUrl}`;
+    window.open(url, "_blank", "noopener");
+  });
+  header.appendChild(openPortalBtn);
 
   const removeBtn = document.createElement("button");
   removeBtn.className = "remove";

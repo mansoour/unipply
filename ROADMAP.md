@@ -45,6 +45,31 @@ Fix ideas to try:
      large binaries; would need IndexedDB or the File System Access API.
    - Backups saved to a real folder on disk automatically, not just manual JSON export.
 
+### Profile schema additions (seen on a real application form)
+Spotted on a live admission form — funding/sponsorship questions that come up often enough to be
+worth a real profile field instead of the free-text Notes box:
+- "Applying with help from an agent?" — Yes/No.
+- Government/sponsorship funding:
+  - "Govt or Sponsorship organisation" (with an "other" free-text variant).
+  - Specific named example seen: "Saudi Ministry of Culture – Cultural Scholarship Program
+    (pending university admission approval)" — suggests a small preset list of common sponsors
+    plus a custom option, not just freeform text.
+- Domestic funding questions (funding source, each with its own Yes/No):
+  - Self-funded
+  - Fees Free Funded
+  - StudyLink Funded
+  - Employer Funded
+  - Scholarship Type (open-ended, e.g. "—" placeholder in the source form)
+
+Likely shape for later: a new "Funding & Sponsorship" profile group (or fields added to Desired
+Degrees) — agent (bool), sponsorship type (select + other), and a funding-source list where each
+entry can be toggled yes/no, plus scholarship type text. Needs more real-world examples before
+locking the exact schema.
+
+Also spotted: additional **Document Checklist** default items worth adding —
+**Passport** and **Certificate** (alongside the existing Transcripts / Recommendation Letters /
+Statement of Purpose / Test Scores).
+
 ### Tracking & status
 - Badge color coding by status (e.g. green = submitted/accepted, gray = not started) on the
   toolbar icon.

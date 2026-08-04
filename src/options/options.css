@@ -250,14 +250,70 @@ body {
 
 .entry-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
   margin-bottom: 8px;
 }
 
 .entry-header h3 {
+  flex: 1;
+  min-width: 0;
   margin: 0;
   font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entry.collapsed > *:not(.entry-header) {
+  display: none;
+}
+
+.collapse-toggle {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 5px;
+  transition: transform 0.15s ease;
+}
+
+.collapse-toggle:hover {
+  background: var(--hover-bg);
+  color: var(--text);
+}
+
+.collapse-toggle svg {
+  width: 15px;
+  height: 15px;
+}
+
+.entry.collapsed .collapse-toggle {
+  transform: rotate(-90deg);
+}
+
+.open-portal-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  font-size: 12px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: transparent;
+  border-radius: 6px;
+}
+
+.open-portal-btn svg {
+  width: 13px;
+  height: 13px;
 }
 
 button {
