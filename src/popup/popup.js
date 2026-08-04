@@ -1,9 +1,11 @@
 import { scanFormFields } from "../content/scanner.js";
 import { fillFields } from "../content/filler.js";
 import { matchFieldsLocally, flattenProfile } from "../profile/matcher-fallback.js";
-import { getProfile } from "../profile/storage.js";
+import { getProfile, getApplications, saveApplications } from "../profile/storage.js";
+import { emptyApplication } from "../applications/schema.js";
 
 let currentTabId = null;
+let currentTabUrl = null;
 let profile = null;
 let candidates = [];
 let rows = [];
@@ -12,6 +14,7 @@ const statusEl = document.getElementById("status");
 const fileNoteEl = document.getElementById("file-note");
 const resultsEl = document.getElementById("results-list");
 const fillBtn = document.getElementById("fill-btn");
+const trackerPromptEl = document.getElementById("tracker-prompt");
 
 function setStatus(text) {
   statusEl.textContent = text;
@@ -125,6 +128,7 @@ function renderRows() {
 async function scan() {
   setStatus("Scanning…");
   fileNoteEl.textContent = "";
+  trackerPromptEl.innerHTML = "";
   resultsEl.innerHTML = "";
   fillBtn.disabled = true;
 
@@ -134,6 +138,7 @@ async function scan() {
     return;
   }
   currentTabId = tab.id;
+  currentTabUrl = tab.url;
 
   let injection;
   try {
@@ -185,6 +190,68 @@ async function scan() {
   fillBtn.disabled = false;
 }
 
+function getHostname(value) {
+  if (!value) return null;
+  try {
+    const withScheme = value.includes("://") ? value : `https://${value}`;
+    return new URL(withScheme).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+function renderTrackerPrompt(hostname, apps) {
+  trackerPromptEl.innerHTML = "";
+
+  const text = document.createElement("span");
+  text.textContent = `Track ${hostname}? `;
+  trackerPromptEl.appendChild(text);
+
+  const addBtn = document.createElement("button");
+  addBtn.type = "button";
+  addBtn.className = "draft-btn";
+  addBtn.textContent = "Add to Tracker";
+  addBtn.addEventListener("click", async () => {
+    const app = emptyApplication({
+      school: hostname,
+      portalUrl: hostname,
+      status: "in_progress",
+      lastFilledAt: new Date().toISOString(),
+    });
+    apps.push(app);
+    await saveApplications(apps);
+    trackerPromptEl.textContent = `Added ${hostname} to your tracker.`;
+  });
+  trackerPromptEl.appendChild(addBtn);
+
+  const dismissBtn = document.createElement("button");
+  dismissBtn.type = "button";
+  dismissBtn.className = "link-btn";
+  dismissBtn.textContent = "Dismiss";
+  dismissBtn.addEventListener("click", () => {
+    trackerPromptEl.innerHTML = "";
+  });
+  trackerPromptEl.appendChild(dismissBtn);
+}
+
+async function linkToApplicationTracker() {
+  const hostname = getHostname(currentTabUrl);
+  if (!hostname) return;
+
+  const apps = await getApplications();
+  const existing = apps.find((a) => getHostname(a.portalUrl) === hostname);
+
+  if (existing) {
+    existing.lastFilledAt = new Date().toISOString();
+    existing.updatedAt = existing.lastFilledAt;
+    await saveApplications(apps);
+    trackerPromptEl.textContent = `Updated tracker: ${existing.school || hostname}.`;
+    return;
+  }
+
+  renderTrackerPrompt(hostname, apps);
+}
+
 async function fillApproved() {
   const mapping = rows.filter((r) => r.include && r.value).map((r) => ({ fieldId: r.fieldId, value: r.value }));
   if (!mapping.length) {
@@ -202,6 +269,10 @@ async function fillApproved() {
   });
   const filledCount = injection[0]?.result ?? 0;
   setStatus(`Filled ${filledCount} field(s). Review the page before submitting.`);
+
+  if (filledCount > 0) {
+    await linkToApplicationTracker();
+  }
 }
 
 document.getElementById("scan-btn").addEventListener("click", scan);

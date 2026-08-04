@@ -128,6 +128,19 @@ select,
   cursor: pointer;
 }
 
+.tracker-prompt {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-height: 0;
+}
+
+.tracker-prompt:empty {
+  display: none;
+}
+
 .disclaimer {
   font-size: 11px;
   color: #57606a;

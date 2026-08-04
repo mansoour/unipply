@@ -2,6 +2,7 @@ import { emptyProfile } from "./schema.js";
 
 const PROFILE_KEY = "profile";
 const SETTINGS_KEY = "settings";
+const APPLICATIONS_KEY = "applications";
 
 export async function getProfile() {
   const data = await chrome.storage.local.get(PROFILE_KEY);
@@ -19,6 +20,15 @@ export async function getSettings() {
 
 export async function saveSettings(settings) {
   await chrome.storage.local.set({ [SETTINGS_KEY]: settings });
+}
+
+export async function getApplications() {
+  const data = await chrome.storage.local.get(APPLICATIONS_KEY);
+  return data[APPLICATIONS_KEY] || [];
+}
+
+export async function saveApplications(applications) {
+  await chrome.storage.local.set({ [APPLICATIONS_KEY]: applications });
 }
 
 export async function exportProfile() {

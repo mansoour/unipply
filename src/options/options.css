@@ -114,7 +114,7 @@ body {
   color: var(--accent-contrast);
 }
 
-.nav-item.settings {
+.nav-item.divider {
   margin-top: 10px;
   border-top: 1px solid var(--border);
   padding-top: 12px;
@@ -224,4 +224,82 @@ button.add-entry {
   margin-top: 20px;
   flex-wrap: wrap;
   align-items: center;
+}
+
+.status-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.status-badge[data-status="not_started"] {
+  background: rgba(107, 114, 128, 0.18);
+}
+.status-badge[data-status="in_progress"] {
+  background: rgba(59, 130, 246, 0.18);
+}
+.status-badge[data-status="submitted"] {
+  background: rgba(31, 136, 61, 0.18);
+}
+.status-badge[data-status="interview"] {
+  background: rgba(168, 85, 247, 0.18);
+}
+.status-badge[data-status="accepted"] {
+  background: rgba(34, 197, 94, 0.25);
+}
+.status-badge[data-status="rejected"] {
+  background: rgba(239, 68, 68, 0.2);
+}
+.status-badge[data-status="waitlisted"],
+.status-badge[data-status="deferred"] {
+  background: rgba(234, 179, 8, 0.2);
+}
+
+.checklist-title {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 10px 0 6px;
+  color: var(--text-muted);
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.checklist-item input[type="text"] {
+  flex: 1;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.remove-item {
+  padding: 2px 8px;
+  line-height: 1;
+  border-radius: 5px;
+}
+
+.checkbox-field {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-field input[type="checkbox"] {
+  width: auto;
+}
+
+.last-filled-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  margin-bottom: 0;
 }
