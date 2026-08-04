@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Uni Application Autofill</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Uni Application Autofill</h1>
+      <button id="open-options" type="button" class="link-btn">Edit Profile</button>
+    </header>
+
+    <button id="scan-btn" type="button" class="primary full-width">Scan this page</button>
+    <p id="status" class="status"></p>
+    <p id="file-note" class="file-note"></p>
+
+    <div id="results-list"></div>
+
+    <button id="fill-btn" type="button" class="primary full-width" disabled>Fill approved fields</button>
+    <p class="disclaimer">Nothing is ever submitted automatically — review the page before you click Submit.</p>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,136 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 380px;
+  max-height: 560px;
+  overflow-y: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 12px;
+  color: #1f2328;
+  font-size: 13px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+h1 {
+  font-size: 15px;
+  margin: 0;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #0969da;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+}
+
+button.full-width {
+  width: 100%;
+  padding: 8px;
+  margin: 6px 0;
+}
+
+button.primary {
+  background: #1f883d;
+  color: #fff;
+  border: 1px solid #1f883d;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+button.primary:disabled {
+  background: #94d3a2;
+  border-color: #94d3a2;
+  cursor: not-allowed;
+}
+
+.status {
+  font-size: 12px;
+  color: #57606a;
+  min-height: 14px;
+}
+
+.file-note {
+  font-size: 12px;
+  color: #9a6700;
+}
+
+.row {
+  border: 1px solid #d8dee4;
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 8px;
+  background: #fafbfc;
+}
+
+.row-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.row-header label {
+  flex: 1;
+  font-weight: 600;
+  font-size: 12.5px;
+  word-break: break-word;
+}
+
+.confidence {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #ddf4e4;
+  color: #116329;
+  white-space: nowrap;
+}
+
+.confidence.low {
+  background: #fff1e5;
+  color: #9a6700;
+}
+
+select,
+.row input[type="text"],
+.row textarea {
+  width: 100%;
+  margin-top: 6px;
+  padding: 5px 6px;
+  border: 1px solid #d0d7de;
+  border-radius: 5px;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.row textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+.draft-btn {
+  margin-top: 6px;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 5px;
+  border: 1px solid #0969da;
+  color: #0969da;
+  background: #fff;
+  cursor: pointer;
+}
+
+.disclaimer {
+  font-size: 11px;
+  color: #57606a;
+  text-align: center;
+  margin-top: 4px;
+}
