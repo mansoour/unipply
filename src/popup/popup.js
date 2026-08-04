@@ -30,6 +30,7 @@ let rows = [];
 
 const statusEl = document.getElementById("status");
 const fileNoteEl = document.getElementById("file-note");
+const entryPickersEl = document.getElementById("entry-pickers");
 const resultsEl = document.getElementById("results-list");
 const fillBtn = document.getElementById("fill-btn");
 const trackerPromptEl = document.getElementById("tracker-prompt");
@@ -45,6 +46,74 @@ function fieldDisplayName(field) {
 function buildQuestionText(field) {
   const parts = [field.label, field.ariaLabel, field.nearbyText, field.placeholder].filter(Boolean);
   return parts.join(" — ") || "Please write a response for this application question.";
+}
+
+function summarizeEntry(group, entry, index) {
+  const parts = group.fields
+    .map((f) => entry[f.key])
+    .filter(Boolean)
+    .slice(0, 2);
+  return parts.length ? parts.join(" — ") : `${group.label} #${index + 1}`;
+}
+
+// Some admission sites only show one Employment/Education/etc. block per page
+// load — you fill it, the page refreshes, and you fill the next one on a
+// fresh page. Since that's a single set of fields each time, the matcher has
+// no way to know "this page is for saved entry #2" on its own. This renders
+// one dropdown per repeatable group found among the matched fields, letting
+// the user say which saved entry this page's fields should come from —
+// changing it re-points every field in that group at once instead of having
+// to override each field's dropdown individually.
+function renderEntryPickers() {
+  entryPickersEl.innerHTML = "";
+  if (!profile) return;
+
+  const groupsPresent = new Set();
+  for (const row of rows) {
+    if (isRepeatableEntryKey(row.profileKey)) groupsPresent.add(row.profileKey.split(".")[0]);
+  }
+
+  for (const groupKey of groupsPresent) {
+    const group = PROFILE_GROUPS.find((g) => g.key === groupKey);
+    const entries = profile[groupKey] || [];
+    if (!group || entries.length < 2) continue; // nothing to choose between
+
+    const rowsForGroup = rows.filter((r) => r.profileKey.startsWith(`${groupKey}.`));
+    const currentIndex = Number(rowsForGroup[0].profileKey.split(".")[1]);
+
+    const wrap = document.createElement("div");
+    wrap.className = "entry-picker";
+
+    const label = document.createElement("label");
+    label.textContent = `This page's ${group.label} entry:`;
+    wrap.appendChild(label);
+
+    const select = document.createElement("select");
+    entries.forEach((entry, idx) => {
+      const opt = document.createElement("option");
+      opt.value = String(idx);
+      opt.textContent = summarizeEntry(group, entry, idx);
+      if (idx === currentIndex) opt.selected = true;
+      select.appendChild(opt);
+    });
+    select.addEventListener("change", () => {
+      const newIndex = Number(select.value);
+      for (const row of rows) {
+        if (!row.profileKey.startsWith(`${groupKey}.`)) continue;
+        const fieldKey = row.profileKey.split(".").slice(2).join(".");
+        const newPath = `${groupKey}.${newIndex}.${fieldKey}`;
+        const match = candidates.find((c) => c.path === newPath);
+        row.profileKey = newPath;
+        row.value = match ? match.value : "";
+        row.include = Boolean(match && match.value);
+        row.duplicateWarning = false;
+      }
+      renderRows();
+    });
+    wrap.appendChild(select);
+
+    entryPickersEl.appendChild(wrap);
+  }
 }
 
 function renderRows() {
@@ -153,6 +222,7 @@ async function scan() {
   setStatus("Scanning…");
   fileNoteEl.textContent = "";
   trackerPromptEl.innerHTML = "";
+  entryPickersEl.innerHTML = "";
   resultsEl.innerHTML = "";
   fillBtn.disabled = true;
 
@@ -222,6 +292,7 @@ async function scan() {
     }
   }
 
+  renderEntryPickers();
   renderRows();
   fillBtn.disabled = false;
 }

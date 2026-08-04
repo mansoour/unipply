@@ -98,14 +98,19 @@ Residency group:
   progress or context.
 - Known-ATS-platform presets (Slate, Liaison CAS, Embark, ApplyWeb, Power Apps/Power Pages) for
   faster, more reliable matching on the platforms that show up again and again.
-- **Repeated field blocks (e.g. "Employer 1" / "Employer 2") get smarter, not just safer.** Today
-  (fixed): if a form has two Employment blocks but the profile only has one saved entry, both
-  fields used to silently get filled with the same job — now the popup only auto-fills the first
-  match and flags the second as "duplicate?", left unchecked for you to manually pick a different
-  saved entry (or leave blank). The real fix is teaching the matcher to recognize repeated field
-  groups on the page (by DOM position/nearby text like "Employer 1"/"Employer 2") and map them in
-  order to `experience.0`, `experience.1`, etc. automatically — bigger change, same idea would
-  apply to Education, Test Scores, and References too.
+- **Two variants of the same underlying problem, both addressed now:**
+  - *Two blocks on one page* (e.g. "Employer 1" / "Employer 2" fields together) — used to silently
+    fill both with the same saved entry. Now the popup only auto-fills the first match and flags
+    the second as "duplicate?", left unchecked so you pick a different saved entry or leave it
+    blank.
+  - *One block per page, page refreshes to add the next* (common on sites where you save one
+    Employment/Education entry at a time) — the matcher had no way to know "this page is for
+    saved entry #2." The popup now shows a "This page's Employment/Education/etc. entry:" picker
+    whenever it detects fields from a repeatable group and you have 2+ saved entries — switching
+    it re-points every matched field on the page to that entry at once.
+  - Still open: doing this automatically (detecting repeated blocks or page-refresh sequences by
+    DOM position/labels and auto-advancing through saved entries) instead of requiring the manual
+    picker — bigger change, not done yet.
 
 ### AI features
 - "Explain this question" — plain-language explainer for confusing application prompts (from the
