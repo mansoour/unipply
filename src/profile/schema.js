@@ -105,3 +105,25 @@ export function emptyProfile() {
   }
   return profile;
 }
+
+// Rough completeness proxy: non-repeatable fields count individually,
+// each repeatable group counts as one unit (satisfied once it has an entry).
+export function computeCompleteness(profile) {
+  let satisfied = 0;
+  let total = 0;
+
+  for (const group of PROFILE_GROUPS) {
+    if (group.repeatable) {
+      total += 1;
+      if ((profile[group.key] || []).length > 0) satisfied += 1;
+    } else {
+      const entry = profile[group.key] || {};
+      for (const field of group.fields) {
+        total += 1;
+        if (entry[field.key]) satisfied += 1;
+      }
+    }
+  }
+
+  return total === 0 ? 0 : Math.round((satisfied / total) * 100);
+}

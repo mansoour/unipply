@@ -1,7 +1,46 @@
-import { PROFILE_GROUPS, emptyProfile } from "../profile/schema.js";
+import { PROFILE_GROUPS, emptyProfile, computeCompleteness } from "../profile/schema.js";
 import { getProfile, saveProfile, getSettings, saveSettings, exportProfile, importProfile } from "../profile/storage.js";
 
 let profile = emptyProfile();
+let settings = { geminiApiKey: "", model: "gemini-3.5-flash" };
+let activeKey = PROFILE_GROUPS[0].key;
+
+const navList = document.getElementById("nav-list");
+const panel = document.getElementById("panel");
+const statusPill = document.getElementById("status-pill");
+const progressFill = document.getElementById("progress-fill");
+const progressLabel = document.getElementById("progress-label");
+
+function debounce(fn, delay) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
+function setStatus(text, saving = false) {
+  statusPill.textContent = text;
+  statusPill.classList.toggle("saving", saving);
+}
+
+const scheduleProfileSave = debounce(async () => {
+  setStatus("Saving…", true);
+  await saveProfile(profile);
+  setStatus("All changes saved");
+}, 600);
+
+const scheduleSettingsSave = debounce(async () => {
+  setStatus("Saving…", true);
+  await saveSettings(settings);
+  setStatus("All changes saved");
+}, 600);
+
+function updateProgress() {
+  const pct = computeCompleteness(profile);
+  progressFill.style.width = `${pct}%`;
+  progressLabel.textContent = `${pct}% complete`;
+}
 
 function fieldInput(field, value, onChange) {
   const wrapper = document.createElement("label");
@@ -30,50 +69,71 @@ function renderEntryFields(group, entry, onFieldChange) {
   return frag;
 }
 
+function onProfileFieldChange() {
+  updateProgress();
+  scheduleProfileSave();
+}
+
 function renderNonRepeatableGroup(group, container) {
-  container.innerHTML = "";
   const title = document.createElement("h2");
   title.textContent = group.label;
   container.appendChild(title);
 
   if (!profile[group.key]) profile[group.key] = {};
   const entry = profile[group.key];
-  container.appendChild(renderEntryFields(group, entry, (key, val) => (entry[key] = val)));
+  container.appendChild(
+    renderEntryFields(group, entry, (key, val) => {
+      entry[key] = val;
+      onProfileFieldChange();
+    })
+  );
 }
 
 function renderRepeatableGroup(group, container) {
-  container.innerHTML = "";
+  if (!Array.isArray(profile[group.key])) profile[group.key] = [];
+  const entries = profile[group.key];
+
   const title = document.createElement("h2");
   title.textContent = group.label;
   container.appendChild(title);
 
-  if (!Array.isArray(profile[group.key])) profile[group.key] = [];
-  const entries = profile[group.key];
+  const listEl = document.createElement("div");
+  container.appendChild(listEl);
 
-  entries.forEach((entry, index) => {
-    const entryEl = document.createElement("div");
-    entryEl.className = "entry";
+  function renderEntries() {
+    listEl.innerHTML = "";
+    entries.forEach((entry, index) => {
+      const entryEl = document.createElement("div");
+      entryEl.className = "entry";
 
-    const header = document.createElement("div");
-    header.className = "entry-header";
-    const h3 = document.createElement("h3");
-    h3.textContent = `${group.label} #${index + 1}`;
-    header.appendChild(h3);
+      const header = document.createElement("div");
+      header.className = "entry-header";
+      const h3 = document.createElement("h3");
+      h3.textContent = `${group.label} #${index + 1}`;
+      header.appendChild(h3);
 
-    const removeBtn = document.createElement("button");
-    removeBtn.className = "remove";
-    removeBtn.type = "button";
-    removeBtn.textContent = "Remove";
-    removeBtn.addEventListener("click", () => {
-      entries.splice(index, 1);
-      renderRepeatableGroup(group, container);
+      const removeBtn = document.createElement("button");
+      removeBtn.className = "remove";
+      removeBtn.type = "button";
+      removeBtn.textContent = "Remove";
+      removeBtn.addEventListener("click", () => {
+        entries.splice(index, 1);
+        renderEntries();
+        onProfileFieldChange();
+      });
+      header.appendChild(removeBtn);
+      entryEl.appendChild(header);
+
+      entryEl.appendChild(
+        renderEntryFields(group, entry, (key, val) => {
+          entry[key] = val;
+          onProfileFieldChange();
+        })
+      );
+      listEl.appendChild(entryEl);
     });
-    header.appendChild(removeBtn);
-    entryEl.appendChild(header);
-
-    entryEl.appendChild(renderEntryFields(group, entry, (key, val) => (entry[key] = val)));
-    container.appendChild(entryEl);
-  });
+  }
+  renderEntries();
 
   const addBtn = document.createElement("button");
   addBtn.className = "add-entry";
@@ -81,56 +141,59 @@ function renderRepeatableGroup(group, container) {
   addBtn.textContent = `+ Add ${group.label}`;
   addBtn.addEventListener("click", () => {
     entries.push({});
-    renderRepeatableGroup(group, container);
+    renderEntries();
+    onProfileFieldChange();
   });
   container.appendChild(addBtn);
 }
 
-function renderAllGroups() {
-  const root = document.getElementById("groups-container");
-  root.innerHTML = "";
-  for (const group of PROFILE_GROUPS) {
-    const section = document.createElement("section");
-    section.className = "card";
-    root.appendChild(section);
-    if (group.repeatable) {
-      renderRepeatableGroup(group, section);
-    } else {
-      renderNonRepeatableGroup(group, section);
-    }
-  }
-}
+function renderSettingsPanel(container) {
+  const title = document.createElement("h2");
+  title.textContent = "Settings";
+  container.appendChild(title);
 
-function flashStatus(elId, message) {
-  const el = document.getElementById(elId);
-  el.textContent = message;
-  setTimeout(() => {
-    if (el.textContent === message) el.textContent = "";
-  }, 2500);
-}
+  const disclosure = document.createElement("p");
+  disclosure.className = "disclosure";
+  disclosure.textContent =
+    "Your profile and API key stay on this device (chrome.storage.local). The only network calls Unipply makes are to the Gemini API, using the key below, when you scan a page or draft an essay.";
+  container.appendChild(disclosure);
 
-async function init() {
-  profile = await getProfile();
-  renderAllGroups();
-
-  const settings = await getSettings();
-  document.getElementById("gemini-api-key").value = settings.geminiApiKey || "";
-  document.getElementById("gemini-model").value = settings.model || "gemini-3.5-flash";
-
-  document.getElementById("save-profile").addEventListener("click", async () => {
-    await saveProfile(profile);
-    flashStatus("profile-status", "Saved.");
+  const apiKeyField = document.createElement("label");
+  apiKeyField.className = "field";
+  apiKeyField.innerHTML = "<span>Gemini API Key</span>";
+  const apiKeyInput = document.createElement("input");
+  apiKeyInput.type = "password";
+  apiKeyInput.autocomplete = "off";
+  apiKeyInput.placeholder = "Paste your Gemini API key";
+  apiKeyInput.value = settings.geminiApiKey || "";
+  apiKeyInput.addEventListener("input", () => {
+    settings.geminiApiKey = apiKeyInput.value.trim();
+    scheduleSettingsSave();
   });
+  apiKeyField.appendChild(apiKeyInput);
+  container.appendChild(apiKeyField);
 
-  document.getElementById("save-settings").addEventListener("click", async () => {
-    await saveSettings({
-      geminiApiKey: document.getElementById("gemini-api-key").value.trim(),
-      model: document.getElementById("gemini-model").value.trim() || "gemini-3.5-flash",
-    });
-    flashStatus("settings-status", "Saved.");
+  const modelField = document.createElement("label");
+  modelField.className = "field";
+  modelField.innerHTML = "<span>Model</span>";
+  const modelInput = document.createElement("input");
+  modelInput.type = "text";
+  modelInput.placeholder = "gemini-3.5-flash";
+  modelInput.value = settings.model || "gemini-3.5-flash";
+  modelInput.addEventListener("input", () => {
+    settings.model = modelInput.value.trim() || "gemini-3.5-flash";
+    scheduleSettingsSave();
   });
+  modelField.appendChild(modelInput);
+  container.appendChild(modelField);
 
-  document.getElementById("export-profile").addEventListener("click", async () => {
+  const actions = document.createElement("div");
+  actions.className = "settings-actions";
+
+  const exportBtn = document.createElement("button");
+  exportBtn.type = "button";
+  exportBtn.textContent = "Export Backup (JSON)";
+  exportBtn.addEventListener("click", async () => {
     const json = await exportProfile();
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -140,14 +203,75 @@ async function init() {
     a.click();
     URL.revokeObjectURL(url);
   });
+  actions.appendChild(exportBtn);
+
+  const importBtn = document.createElement("button");
+  importBtn.type = "button";
+  importBtn.textContent = "Import Backup (JSON)";
+  importBtn.addEventListener("click", () => document.getElementById("import-profile").click());
+  actions.appendChild(importBtn);
+
+  container.appendChild(actions);
+}
+
+function renderPanel() {
+  panel.innerHTML = "";
+  if (activeKey === "settings") {
+    renderSettingsPanel(panel);
+    return;
+  }
+  const group = PROFILE_GROUPS.find((g) => g.key === activeKey);
+  if (!group) return;
+  if (group.repeatable) {
+    renderRepeatableGroup(group, panel);
+  } else {
+    renderNonRepeatableGroup(group, panel);
+  }
+}
+
+function renderNav() {
+  navList.innerHTML = "";
+  for (const group of PROFILE_GROUPS) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "nav-item" + (activeKey === group.key ? " active" : "");
+    btn.textContent = group.label;
+    btn.addEventListener("click", () => {
+      activeKey = group.key;
+      renderNav();
+      renderPanel();
+    });
+    navList.appendChild(btn);
+  }
+
+  const settingsBtn = document.createElement("button");
+  settingsBtn.type = "button";
+  settingsBtn.className = "nav-item settings" + (activeKey === "settings" ? " active" : "");
+  settingsBtn.textContent = "Settings";
+  settingsBtn.addEventListener("click", () => {
+    activeKey = "settings";
+    renderNav();
+    renderPanel();
+  });
+  navList.appendChild(settingsBtn);
+}
+
+async function init() {
+  profile = await getProfile();
+  settings = await getSettings();
+
+  renderNav();
+  renderPanel();
+  updateProgress();
 
   document.getElementById("import-profile").addEventListener("change", async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const text = await file.text();
     profile = await importProfile(text);
-    renderAllGroups();
-    flashStatus("profile-status", "Imported.");
+    updateProgress();
+    if (activeKey !== "settings") renderPanel();
+    setStatus("Imported.");
     e.target.value = "";
   });
 }

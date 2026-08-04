@@ -6,40 +6,26 @@
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
-    <header>
-      <h1>Your Profile</h1>
-      <p class="subtitle">
-        This is the single source of truth the extension fills forms from. Everything here stays on
-        this device (<code>chrome.storage.local</code>) except when a scan or essay draft sends the
-        relevant field labels and profile values to the Gemini API using your key below.
-      </p>
-    </header>
+    <div class="app">
+      <aside class="sidebar">
+        <img src="../../assets/branding/logo.png" alt="Unipply" class="logo" />
 
-    <section id="settings-section" class="card">
-      <h2>AI Settings</h2>
-      <label class="field">
-        <span>Gemini API Key</span>
-        <input type="password" id="gemini-api-key" placeholder="Paste your Gemini API key" autocomplete="off" />
-      </label>
-      <label class="field">
-        <span>Model</span>
-        <input type="text" id="gemini-model" placeholder="gemini-3.5-flash" />
-      </label>
-      <button id="save-settings" type="button">Save AI Settings</button>
-      <span id="settings-status" class="status"></span>
-    </section>
+        <div class="progress-wrap">
+          <div class="progress-track">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <span id="progress-label" class="progress-label"></span>
+        </div>
 
-    <section id="groups-container"></section>
+        <nav id="nav-list" class="nav-list"></nav>
 
-    <section class="card actions-bar">
-      <button id="save-profile" type="button">Save Profile</button>
-      <button id="export-profile" type="button">Export JSON</button>
-      <label class="import-label">
-        Import JSON
-        <input type="file" id="import-profile" accept="application/json" hidden />
-      </label>
-      <span id="profile-status" class="status"></span>
-    </section>
+        <p id="status-pill" class="status-pill"></p>
+      </aside>
+
+      <main id="panel" class="panel"></main>
+    </div>
+
+    <input type="file" id="import-profile" accept="application/json" hidden />
 
     <script type="module" src="options.js"></script>
   </body>
