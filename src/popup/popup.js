@@ -2,7 +2,8 @@ import { scanFormFields } from "../content/scanner.js";
 import { fillFields } from "../content/filler.js";
 import { matchFieldsLocally, flattenProfile } from "../profile/matcher-fallback.js";
 import { getProfile, getApplications, saveApplications } from "../profile/storage.js";
-import { emptyApplication } from "../applications/schema.js";
+import { emptyApplication, statusLabel } from "../applications/schema.js";
+import { isLikelyAdmissionPage } from "../applications/detection.js";
 
 let currentTabId = null;
 let currentTabUrl = null;
@@ -200,11 +201,11 @@ function getHostname(value) {
   }
 }
 
-function renderTrackerPrompt(hostname, apps) {
+function renderTrackerPrompt(hostname, apps, { afterFill }) {
   trackerPromptEl.innerHTML = "";
 
   const text = document.createElement("span");
-  text.textContent = `Track ${hostname}? `;
+  text.textContent = afterFill ? `Track ${hostname}? ` : `This looks like an application page — track ${hostname}? `;
   trackerPromptEl.appendChild(text);
 
   const addBtn = document.createElement("button");
@@ -215,8 +216,8 @@ function renderTrackerPrompt(hostname, apps) {
     const app = emptyApplication({
       school: hostname,
       portalUrl: hostname,
-      status: "in_progress",
-      lastFilledAt: new Date().toISOString(),
+      status: afterFill ? "in_progress" : "not_started",
+      lastFilledAt: afterFill ? new Date().toISOString() : null,
     });
     apps.push(app);
     await saveApplications(apps);
@@ -234,7 +235,10 @@ function renderTrackerPrompt(hostname, apps) {
   trackerPromptEl.appendChild(dismissBtn);
 }
 
-async function linkToApplicationTracker() {
+// afterFill=true: called right after a successful Fill (updates/creates with "in progress").
+// afterFill=false: called on popup open when the page merely looks like an application (informational,
+// or an offer to add it — never silently creates or edits anything without a click).
+async function linkToApplicationTracker({ afterFill }) {
   const hostname = getHostname(currentTabUrl);
   if (!hostname) return;
 
@@ -242,14 +246,19 @@ async function linkToApplicationTracker() {
   const existing = apps.find((a) => getHostname(a.portalUrl) === hostname);
 
   if (existing) {
-    existing.lastFilledAt = new Date().toISOString();
-    existing.updatedAt = existing.lastFilledAt;
-    await saveApplications(apps);
-    trackerPromptEl.textContent = `Updated tracker: ${existing.school || hostname}.`;
+    if (afterFill) {
+      existing.lastFilledAt = new Date().toISOString();
+      if (existing.status === "not_started") existing.status = "in_progress";
+      existing.updatedAt = existing.lastFilledAt;
+      await saveApplications(apps);
+      trackerPromptEl.textContent = `Updated tracker: ${existing.school || hostname}.`;
+    } else {
+      trackerPromptEl.textContent = `📌 Tracking: ${existing.school || hostname} (${statusLabel(existing.status)})`;
+    }
     return;
   }
 
-  renderTrackerPrompt(hostname, apps);
+  renderTrackerPrompt(hostname, apps, { afterFill });
 }
 
 async function fillApproved() {
@@ -271,10 +280,21 @@ async function fillApproved() {
   setStatus(`Filled ${filledCount} field(s). Review the page before submitting.`);
 
   if (filledCount > 0) {
-    await linkToApplicationTracker();
+    await linkToApplicationTracker({ afterFill: true });
   }
 }
 
 document.getElementById("scan-btn").addEventListener("click", scan);
 document.getElementById("fill-btn").addEventListener("click", fillApproved);
 document.getElementById("open-options").addEventListener("click", () => chrome.runtime.openOptionsPage());
+
+(async function detectOnOpen() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) return;
+  currentTabId = tab.id;
+  currentTabUrl = tab.url;
+
+  if (isLikelyAdmissionPage(tab.title, tab.url)) {
+    await linkToApplicationTracker({ afterFill: false });
+  }
+})();

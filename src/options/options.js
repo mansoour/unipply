@@ -9,7 +9,7 @@ import {
   exportProfile,
   importProfile,
 } from "../profile/storage.js";
-import { STATUS_OPTIONS, emptyApplication } from "../applications/schema.js";
+import { STATUS_OPTIONS, emptyApplication, statusLabel } from "../applications/schema.js";
 
 let profile = emptyProfile();
 let settings = { geminiApiKey: "", model: "gemini-3.5-flash" };
@@ -176,10 +176,6 @@ function textField(labelText, value, onChange, { type = "text" } = {}) {
   input.addEventListener("input", () => onChange(input.value));
   wrapper.appendChild(input);
   return wrapper;
-}
-
-function statusLabel(value) {
-  return STATUS_OPTIONS.find((s) => s.value === value)?.label || value;
 }
 
 function renderApplicationCard(app, index, onRemove) {

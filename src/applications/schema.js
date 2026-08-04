@@ -16,6 +16,10 @@ export const DEFAULT_CHECKLIST_ITEMS = [
   "Test scores sent",
 ];
 
+export function statusLabel(value) {
+  return STATUS_OPTIONS.find((s) => s.value === value)?.label || value;
+}
+
 export function emptyApplication(overrides = {}) {
   const now = new Date().toISOString();
   return {
