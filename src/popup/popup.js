@@ -2,11 +2,13 @@ import { scanFormFields } from "../content/scanner.js";
 import { fillFields } from "../content/filler.js";
 import { matchFieldsLocally, flattenProfile } from "../profile/matcher-fallback.js";
 import { getProfile, getApplications, saveApplications } from "../profile/storage.js";
-import { emptyApplication, statusLabel } from "../applications/schema.js";
+import { emptyApplication, statusLabel, guessSchoolName } from "../applications/schema.js";
 import { isLikelyAdmissionPage } from "../applications/detection.js";
+import { ICONS } from "../shared/icons.js";
 
 let currentTabId = null;
 let currentTabUrl = null;
+let currentTabTitle = null;
 let profile = null;
 let candidates = [];
 let rows = [];
@@ -140,6 +142,7 @@ async function scan() {
   }
   currentTabId = tab.id;
   currentTabUrl = tab.url;
+  currentTabTitle = tab.title;
 
   let injection;
   try {
@@ -201,8 +204,24 @@ function getHostname(value) {
   }
 }
 
+function setTrackerMessage(text) {
+  trackerPromptEl.innerHTML = "";
+  const icon = document.createElement("span");
+  icon.className = "tracker-icon";
+  icon.innerHTML = ICONS.pin;
+  trackerPromptEl.appendChild(icon);
+  const span = document.createElement("span");
+  span.textContent = text;
+  trackerPromptEl.appendChild(span);
+}
+
 function renderTrackerPrompt(hostname, apps, { afterFill }) {
   trackerPromptEl.innerHTML = "";
+
+  const icon = document.createElement("span");
+  icon.className = "tracker-icon";
+  icon.innerHTML = ICONS.pin;
+  trackerPromptEl.appendChild(icon);
 
   const text = document.createElement("span");
   text.textContent = afterFill ? `Track ${hostname}? ` : `This looks like an application page — track ${hostname}? `;
@@ -214,14 +233,14 @@ function renderTrackerPrompt(hostname, apps, { afterFill }) {
   addBtn.textContent = "Add to Tracker";
   addBtn.addEventListener("click", async () => {
     const app = emptyApplication({
-      school: hostname,
+      school: guessSchoolName(currentTabTitle, hostname),
       portalUrl: hostname,
       status: afterFill ? "in_progress" : "not_started",
       lastFilledAt: afterFill ? new Date().toISOString() : null,
     });
     apps.push(app);
     await saveApplications(apps);
-    trackerPromptEl.textContent = `Added ${hostname} to your tracker.`;
+    setTrackerMessage(`Added ${app.school} to your tracker.`);
   });
   trackerPromptEl.appendChild(addBtn);
 
@@ -251,9 +270,9 @@ async function linkToApplicationTracker({ afterFill }) {
       if (existing.status === "not_started") existing.status = "in_progress";
       existing.updatedAt = existing.lastFilledAt;
       await saveApplications(apps);
-      trackerPromptEl.textContent = `Updated tracker: ${existing.school || hostname}.`;
+      setTrackerMessage(`Updated tracker: ${existing.school || hostname}.`);
     } else {
-      trackerPromptEl.textContent = `📌 Tracking: ${existing.school || hostname} (${statusLabel(existing.status)})`;
+      setTrackerMessage(`Tracking: ${existing.school || hostname} (${statusLabel(existing.status)})`);
     }
     return;
   }
@@ -293,6 +312,7 @@ document.getElementById("open-options").addEventListener("click", () => chrome.r
   if (!tab?.id) return;
   currentTabId = tab.id;
   currentTabUrl = tab.url;
+  currentTabTitle = tab.title;
 
   if (isLikelyAdmissionPage(tab.title, tab.url)) {
     await linkToApplicationTracker({ afterFill: false });
