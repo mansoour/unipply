@@ -32,3 +32,17 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   return false;
 });
+
+// The popup persists its scan results to chrome.storage.session (keyed by
+// tab id) so reopening it doesn't lose your review/fill progress. That saved
+// state should only go away when the actual page reloads or navigates away —
+// not just because the popup lost focus and Chrome tore it down.
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.status === "loading") {
+    chrome.storage.session.remove(`popupState:${tabId}`);
+  }
+});
+
+chrome.tabs.onRemoved.addListener((tabId) => {
+  chrome.storage.session.remove(`popupState:${tabId}`);
+});

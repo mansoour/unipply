@@ -28,6 +28,40 @@ let profile = null;
 let candidates = [];
 let rows = [];
 
+// Chrome tears the popup document down every time it loses focus — reopening
+// it normally means "click Scan again." To avoid losing review/fill progress
+// just because the popup closed, scan state is mirrored to
+// chrome.storage.session (per tab id) and restored on open. The background
+// service worker (service-worker.js) clears that saved state when the tab
+// actually reloads/navigates or closes — so this only survives while the
+// same page is still open.
+function stateKey(tabId) {
+  return `popupState:${tabId}`;
+}
+
+function debounce(fn, delay) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
+function persistState() {
+  if (!currentTabId) return;
+  chrome.storage.session.set({
+    [stateKey(currentTabId)]: {
+      url: currentTabUrl,
+      rows,
+      candidates,
+      statusText: statusEl.textContent,
+      fileNoteText: fileNoteEl.textContent,
+    },
+  });
+}
+
+const schedulePersistState = debounce(persistState, 400);
+
 const statusEl = document.getElementById("status");
 const fileNoteEl = document.getElementById("file-note");
 const entryPickersEl = document.getElementById("entry-pickers");
@@ -109,6 +143,7 @@ function renderEntryPickers() {
         row.duplicateWarning = false;
       }
       renderRows();
+      persistState();
     });
     wrap.appendChild(select);
 
@@ -133,7 +168,10 @@ function renderRows() {
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.checked = row.include;
-    checkbox.addEventListener("change", () => (row.include = checkbox.checked));
+    checkbox.addEventListener("change", () => {
+      row.include = checkbox.checked;
+      persistState();
+    });
     header.appendChild(checkbox);
 
     const label = document.createElement("label");
@@ -176,6 +214,7 @@ function renderRows() {
         checkbox.checked = true;
         valueInput.value = match.value;
       }
+      persistState();
     });
     rowEl.appendChild(select);
 
@@ -183,7 +222,10 @@ function renderRows() {
     const valueInput = document.createElement(isTextarea ? "textarea" : "input");
     if (!isTextarea) valueInput.type = "text";
     valueInput.value = row.value || "";
-    valueInput.addEventListener("input", () => (row.value = valueInput.value));
+    valueInput.addEventListener("input", () => {
+      row.value = valueInput.value;
+      schedulePersistState();
+    });
     rowEl.appendChild(valueInput);
 
     if (row.field.isEssayLike) {
@@ -207,6 +249,7 @@ function renderRows() {
           valueInput.value = resp.draft;
           checkbox.checked = true;
           select.value = "";
+          persistState();
         } else {
           setStatus(`Draft failed: ${resp?.error || "unknown error"}`);
         }
@@ -225,6 +268,8 @@ async function scan() {
   entryPickersEl.innerHTML = "";
   resultsEl.innerHTML = "";
   fillBtn.disabled = true;
+  rows = [];
+  candidates = [];
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) {
@@ -240,6 +285,7 @@ async function scan() {
     injection = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: scanFormFields });
   } catch (err) {
     setStatus(`Could not scan this page: ${err.message}`);
+    persistState();
     return;
   }
 
@@ -253,6 +299,7 @@ async function scan() {
 
   if (fillableFields.length === 0) {
     setStatus("No fillable fields found on this page.");
+    persistState();
     return;
   }
 
@@ -295,6 +342,7 @@ async function scan() {
   renderEntryPickers();
   renderRows();
   fillBtn.disabled = false;
+  persistState();
 }
 
 function getHostname(value) {
@@ -422,6 +470,7 @@ async function fillApproved() {
   });
   const filledCount = injection[0]?.result ?? 0;
   setStatus(`Filled ${filledCount} field(s). Review the page before submitting.`);
+  persistState();
 
   if (filledCount > 0) {
     await linkToApplicationTracker({ afterFill: true });
@@ -433,12 +482,28 @@ document.getElementById("fill-btn").addEventListener("click", fillApproved);
 document.getElementById("open-options").addEventListener("click", () => chrome.runtime.openOptionsPage());
 document.getElementById("popup-year").textContent = String(new Date().getFullYear());
 
-(async function detectOnOpen() {
+(async function initPopup() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) return;
   currentTabId = tab.id;
   currentTabUrl = tab.url;
   currentTabTitle = tab.title;
+
+  const key = stateKey(tab.id);
+  const stored = await chrome.storage.session.get(key);
+  const saved = stored[key];
+  if (saved && saved.url === tab.url) {
+    candidates = saved.candidates || [];
+    rows = saved.rows || [];
+    setStatus(saved.statusText || "");
+    fileNoteEl.textContent = saved.fileNoteText || "";
+    if (rows.length > 0) {
+      profile = await getProfile();
+      renderEntryPickers();
+      renderRows();
+      fillBtn.disabled = false;
+    }
+  }
 
   if (isLikelyAdmissionPage(tab.title, tab.url)) {
     await linkToApplicationTracker({ afterFill: false });
