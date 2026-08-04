@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Uni Application Autofill",
+  "name": "Unipply",
   "version": "0.1.0",
   "description": "AI-assisted autofill for university admission application forms, using your own saved profile and Gemini API key.",
   "permissions": ["storage", "activeTab", "scripting"],
@@ -11,7 +11,7 @@
   },
   "action": {
     "default_popup": "src/popup/popup.html",
-    "default_title": "Uni Application Autofill"
+    "default_title": "Unipply"
   },
   "options_page": "src/options/options.html"
 }
