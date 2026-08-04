@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Unipply",
   "version": "0.1.0",
-  "description": "AI-assisted autofill for university admission application forms, using your own saved profile and Gemini API key.",
+  "description": "AI-powered university application assistant — save your profile once and autofill admission forms with Gemini, right in Chrome.",
   "permissions": ["storage", "activeTab", "scripting"],
   "host_permissions": ["https://generativelanguage.googleapis.com/*"],
   "background": {
