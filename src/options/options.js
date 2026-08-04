@@ -6,8 +6,8 @@ import {
   saveSettings,
   getApplications,
   saveApplications,
-  exportProfile,
-  importProfile,
+  exportBackup,
+  importBackup,
 } from "../profile/storage.js";
 import { STATUS_OPTIONS, emptyApplication, statusLabel, computeApplicationProgress } from "../applications/schema.js";
 import { ICONS } from "../shared/icons.js";
@@ -27,6 +27,15 @@ let profile = emptyProfile();
 let settings = { geminiApiKey: "", model: "gemini-3.5-flash" };
 let applications = [];
 let activeKey = "home";
+let focusApplicationId = null;
+
+function readInitialRoute() {
+  const match = /^#applications\/(.+)$/.exec(location.hash);
+  if (match) {
+    activeKey = "applications";
+    focusApplicationId = decodeURIComponent(match[1]);
+  }
+}
 
 const navList = document.getElementById("nav-list");
 const panel = document.getElementById("panel");
@@ -276,6 +285,7 @@ function renderChecklistSection(card, app, key, title, touch) {
 function renderApplicationCard(app, index, onRemove) {
   const card = document.createElement("div");
   card.className = "entry";
+  card.dataset.appId = app.id;
 
   const header = document.createElement("div");
   header.className = "entry-header";
@@ -449,6 +459,16 @@ function renderApplicationsPanel(container) {
   }
   renderList();
 
+  if (focusApplicationId) {
+    const target = listEl.querySelector(`[data-app-id="${CSS.escape(focusApplicationId)}"]`);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      target.classList.add("highlight");
+      setTimeout(() => target.classList.remove("highlight"), 2000);
+    }
+    focusApplicationId = null;
+  }
+
   const addBtn = document.createElement("button");
   addBtn.type = "button";
   addBtn.className = "add-entry";
@@ -501,6 +521,18 @@ function renderSettingsPanel(container) {
   modelField.appendChild(modelInput);
   container.appendChild(modelField);
 
+  const backupTitle = document.createElement("h3");
+  backupTitle.textContent = "Backup";
+  backupTitle.style.marginBottom = "4px";
+  container.appendChild(backupTitle);
+
+  const backupNote = document.createElement("p");
+  backupNote.className = "disclosure";
+  backupNote.style.marginBottom = "12px";
+  backupNote.textContent =
+    "Exports your profile and tracked applications as a JSON file — useful for moving to another device or keeping a personal backup. Your Gemini API key is never included; re-enter it after importing elsewhere.";
+  container.appendChild(backupNote);
+
   const actions = document.createElement("div");
   actions.className = "settings-actions";
 
@@ -508,12 +540,12 @@ function renderSettingsPanel(container) {
   exportBtn.type = "button";
   exportBtn.textContent = "Export Backup (JSON)";
   exportBtn.addEventListener("click", async () => {
-    const json = await exportProfile();
+    const json = await exportBackup();
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "unipply-profile.json";
+    a.download = "unipply-backup.json";
     a.click();
     URL.revokeObjectURL(url);
   });
@@ -701,6 +733,7 @@ function renderNav() {
 
 async function init() {
   document.getElementById("app-year").textContent = String(new Date().getFullYear());
+  readInitialRoute();
 
   profile = await getProfile();
   settings = await getSettings();
@@ -714,7 +747,9 @@ async function init() {
     const file = e.target.files[0];
     if (!file) return;
     const text = await file.text();
-    profile = await importProfile(text);
+    const result = await importBackup(text);
+    profile = result.profile;
+    applications = result.applications;
     updateProgress();
     if (activeKey !== "settings") renderPanel();
     setStatus("Imported.");

@@ -204,7 +204,12 @@ function getHostname(value) {
   }
 }
 
-function trackerRow(text) {
+function openApplicationInManage(appId) {
+  const url = chrome.runtime.getURL(`src/options/options.html#applications/${appId}`);
+  chrome.tabs.create({ url });
+}
+
+function trackerRow(text, { appId } = {}) {
   const row = document.createElement("div");
   row.className = "tracker-row";
   const icon = document.createElement("span");
@@ -214,12 +219,23 @@ function trackerRow(text) {
   const span = document.createElement("span");
   span.textContent = text;
   row.appendChild(span);
+
+  if (appId) {
+    const openBtn = document.createElement("button");
+    openBtn.type = "button";
+    openBtn.className = "icon-btn";
+    openBtn.title = "View / edit this application";
+    openBtn.innerHTML = ICONS.edit;
+    openBtn.addEventListener("click", () => openApplicationInManage(appId));
+    row.appendChild(openBtn);
+  }
+
   return row;
 }
 
-function setTrackerMessage(text) {
+function setTrackerMessage(text, appId) {
   trackerPromptEl.innerHTML = "";
-  trackerPromptEl.appendChild(trackerRow(text));
+  trackerPromptEl.appendChild(trackerRow(text, { appId }));
 }
 
 function renderTrackerPrompt(hostname, apps, { afterFill }) {
@@ -244,7 +260,7 @@ function renderTrackerPrompt(hostname, apps, { afterFill }) {
     });
     apps.push(app);
     await saveApplications(apps);
-    setTrackerMessage(`Added ${app.school} to your tracker.`);
+    setTrackerMessage(`Added ${app.school} to your tracker.`, app.id);
   });
   actions.appendChild(addBtn);
 
@@ -276,9 +292,9 @@ async function linkToApplicationTracker({ afterFill }) {
       if (existing.status === "not_started") existing.status = "in_progress";
       existing.updatedAt = existing.lastFilledAt;
       await saveApplications(apps);
-      setTrackerMessage(`Updated tracker: ${existing.school || hostname}.`);
+      setTrackerMessage(`Updated tracker: ${existing.school || hostname}.`, existing.id);
     } else {
-      setTrackerMessage(`Tracking: ${existing.school || hostname} (${statusLabel(existing.status)})`);
+      setTrackerMessage(`Tracking: ${existing.school || hostname} (${statusLabel(existing.status)})`, existing.id);
     }
     return;
   }

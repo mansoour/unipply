@@ -31,13 +31,20 @@ export async function saveApplications(applications) {
   await chrome.storage.local.set({ [APPLICATIONS_KEY]: applications });
 }
 
-export async function exportProfile() {
-  const profile = await getProfile();
-  return JSON.stringify(profile, null, 2);
+// Backup bundle: profile + tracked applications. Deliberately excludes
+// settings (the Gemini API key) — a backup file is meant to be portable/
+// shareable without leaking that.
+export async function exportBackup() {
+  const [profile, applications] = await Promise.all([getProfile(), getApplications()]);
+  return JSON.stringify({ exportedAt: new Date().toISOString(), profile, applications }, null, 2);
 }
 
-export async function importProfile(json) {
-  const profile = JSON.parse(json);
+export async function importBackup(json) {
+  const data = JSON.parse(json);
+  // Backward-compatible with the old export format, which was just the raw profile object.
+  const profile = data.profile || data;
+  const applications = Array.isArray(data.applications) ? data.applications : await getApplications();
   await saveProfile(profile);
-  return profile;
+  await saveApplications(applications);
+  return { profile, applications };
 }
