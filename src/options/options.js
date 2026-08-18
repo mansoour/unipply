@@ -678,22 +678,35 @@ function renderHomePanel(container) {
   meta.textContent = firstName ? `Welcome back, ${firstName} — ${dateText}` : dateText;
   container.appendChild(meta);
 
+  const columns = document.createElement("div");
+  columns.className = "home-columns";
+
+  const mainCol = document.createElement("div");
+  mainCol.className = "home-col-main";
+
+  const sideCol = document.createElement("div");
+  sideCol.className = "home-col-side";
+
+  // Side column: Your Profile — a compact widget next to the main content
+  // instead of stacked above it.
   const profileTitle = document.createElement("h2");
   profileTitle.className = "home-section-title";
   profileTitle.style.marginTop = "0";
   profileTitle.textContent = "Your Profile";
-  container.appendChild(profileTitle);
+  sideCol.appendChild(profileTitle);
 
   const profileCard = document.createElement("div");
   profileCard.className = "profile-progress-card";
   const pct = computeCompleteness(profile);
   profileCard.appendChild(renderProgressBar(pct, `${pct}% complete`));
-  container.appendChild(profileCard);
+  sideCol.appendChild(profileCard);
 
+  // Main column: Overview stats + Recent Applications.
   const overviewTitle = document.createElement("h2");
   overviewTitle.textContent = "Overview";
   overviewTitle.className = "home-section-title";
-  container.appendChild(overviewTitle);
+  overviewTitle.style.marginTop = "0";
+  mainCol.appendChild(overviewTitle);
 
   const statGrid = document.createElement("div");
   statGrid.className = "stat-grid";
@@ -704,48 +717,51 @@ function renderHomePanel(container) {
     const count = applications.filter((a) => a.status === opt.value).length;
     statGrid.appendChild(buildStatCard(STATUS_ICON_KEYS[opt.value], opt.value, count, opt.label));
   }
-  container.appendChild(statGrid);
+  mainCol.appendChild(statGrid);
 
   const recentTitle = document.createElement("h2");
   recentTitle.className = "home-section-title";
   recentTitle.textContent = "Recent Applications";
-  container.appendChild(recentTitle);
+  mainCol.appendChild(recentTitle);
 
   if (applications.length === 0) {
     const empty = document.createElement("div");
     empty.className = "empty-state";
     empty.textContent = "No applications tracked yet — visit a school's application page or add one from the Applications tab.";
-    container.appendChild(empty);
-    return;
+    mainCol.appendChild(empty);
+  } else {
+    const recent = [...applications]
+      .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
+      .slice(0, 10);
+
+    for (const app of recent) {
+      const row = document.createElement("div");
+      row.className = "entry recent-app-row";
+
+      const name = document.createElement("span");
+      name.className = "recent-app-name";
+      name.textContent = app.school || "Untitled application";
+      row.appendChild(name);
+
+      const badge = document.createElement("span");
+      badge.className = "status-badge";
+      badge.dataset.status = app.status;
+      badge.textContent = statusLabel(app.status);
+      row.appendChild(badge);
+
+      const progressWrap = document.createElement("div");
+      progressWrap.className = "recent-app-progress";
+      const appPct = computeApplicationProgress(app);
+      progressWrap.appendChild(renderProgressBar(appPct, `${appPct}%`, { compact: true }));
+      row.appendChild(progressWrap);
+
+      mainCol.appendChild(row);
+    }
   }
 
-  const recent = [...applications]
-    .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
-    .slice(0, 10);
-
-  for (const app of recent) {
-    const row = document.createElement("div");
-    row.className = "entry recent-app-row";
-
-    const name = document.createElement("span");
-    name.className = "recent-app-name";
-    name.textContent = app.school || "Untitled application";
-    row.appendChild(name);
-
-    const badge = document.createElement("span");
-    badge.className = "status-badge";
-    badge.dataset.status = app.status;
-    badge.textContent = statusLabel(app.status);
-    row.appendChild(badge);
-
-    const progressWrap = document.createElement("div");
-    progressWrap.className = "recent-app-progress";
-    const appPct = computeApplicationProgress(app);
-    progressWrap.appendChild(renderProgressBar(appPct, `${appPct}%`, { compact: true }));
-    row.appendChild(progressWrap);
-
-    container.appendChild(row);
-  }
+  columns.appendChild(mainCol);
+  columns.appendChild(sideCol);
+  container.appendChild(columns);
 }
 
 function renderPanel() {

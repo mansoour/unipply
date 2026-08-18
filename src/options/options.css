@@ -470,31 +470,39 @@ button.add-entry {
 .home-meta {
   font-size: 13px;
   color: var(--text-muted);
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+}
+
+.home-columns {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 36px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .home-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.home-col-side {
+  position: sticky;
+  top: 20px;
 }
 
 .home-section-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  margin: 24px 0 10px;
+  margin: 32px 0 16px;
 }
 
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  /* Fits up to 5 columns; below that width it drops to however many
+     130px-minimum columns actually fit, instead of a fixed breakpoint. */
+  grid-template-columns: repeat(auto-fit, minmax(max(130px, (100% - 48px) / 5), 1fr));
   gap: 12px;
-}
-
-@media (max-width: 980px) {
-  .stat-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 620px) {
-  .stat-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 .stat-card {

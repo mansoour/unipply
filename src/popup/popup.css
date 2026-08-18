@@ -38,22 +38,33 @@
 
 body {
   width: 380px;
-  max-height: 560px;
-  overflow-y: auto;
+  max-height: 600px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   padding: 14px;
   background: var(--bg);
   color: var(--text);
   font-size: 13px;
+  box-sizing: border-box;
 }
 
 header {
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border);
+}
+
+main {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .brand {
@@ -341,6 +352,7 @@ select,
 }
 
 .app-footer {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -349,7 +361,6 @@ select,
   font-size: 11px;
   color: var(--text-muted);
   margin-top: 12px;
-  margin-bottom: 6px;
   padding-top: 10px;
   border-top: 1px solid var(--border);
 }
