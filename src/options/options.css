@@ -193,6 +193,10 @@ body {
   max-width: 640px;
 }
 
+.panel.home-panel {
+  max-width: none;
+}
+
 .panel h2 {
   margin-top: 0;
   font-size: 18px;
@@ -454,15 +458,65 @@ button.add-entry {
 }
 
 .stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: 10px;
+  padding: 14px;
   background: var(--bg-elevated);
+}
+
+.stat-icon {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.stat-icon[data-status="total"],
+.stat-icon[data-status="in_progress"] {
+  background: rgba(47, 123, 255, 0.15);
+  color: var(--brand-blue);
+}
+.stat-icon[data-status="not_started"] {
+  background: rgba(107, 114, 128, 0.15);
+  color: #6b7280;
+}
+.stat-icon[data-status="submitted"] {
+  background: rgba(34, 168, 102, 0.15);
+  color: var(--brand-green);
+}
+.stat-icon[data-status="interview"] {
+  background: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
+}
+.stat-icon[data-status="accepted"] {
+  background: rgba(34, 168, 102, 0.22);
+  color: var(--brand-green);
+}
+.stat-icon[data-status="rejected"] {
+  background: rgba(207, 34, 46, 0.15);
+  color: var(--danger);
+}
+.stat-icon[data-status="waitlisted"],
+.stat-icon[data-status="deferred"] {
+  background: rgba(255, 201, 51, 0.22);
+  color: #b45309;
 }
 
 .stat-card .stat-value {
   font-size: 20px;
   font-weight: 700;
+  line-height: 1.2;
 }
 
 .stat-card .stat-label {

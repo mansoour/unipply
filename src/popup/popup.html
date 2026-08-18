@@ -15,21 +15,36 @@
     </header>
 
     <main>
-      <button id="scan-btn" type="button" class="primary full-width">Scan this page</button>
+      <button id="scan-btn" type="button" class="primary full-width">
+        <span class="btn-icon" data-icon="scan"></span>
+        <span>Scan this page</span>
+      </button>
       <p id="status" class="status"></p>
       <p id="file-note" class="file-note"></p>
       <div id="entry-pickers"></div>
 
       <div id="results-list"></div>
 
-      <button id="fill-btn" type="button" class="primary full-width" disabled>Fill approved fields</button>
+      <button id="fill-btn" type="button" class="primary full-width" disabled>
+        <span class="btn-icon" data-icon="edit"></span>
+        <span>Fill approved fields</span>
+      </button>
       <div id="tracker-prompt" class="tracker-prompt"></div>
-      <p class="disclaimer">Nothing is ever submitted automatically — review the page before you click Submit.</p>
+      <p class="disclaimer">
+        <span class="disclaimer-icon" data-icon="shieldCheck"></span>
+        <span>Nothing is ever submitted automatically — review the page before you click Submit.</span>
+      </p>
     </main>
 
     <footer class="app-footer">
-      © <span id="popup-year"></span> Unipply · Built by
-      <a href="https://mansoour.com" target="_blank" rel="noopener">Mansoour</a>
+      <button id="footer-settings" type="button" class="footer-settings-btn">
+        <span class="btn-icon" data-icon="settings"></span>
+        <span>Settings</span>
+      </button>
+      <span class="footer-copyright">
+        © <span id="popup-year"></span> Unipply · Built by
+        <a href="https://mansoour.com" target="_blank" rel="noopener">Mansoour</a>
+      </span>
     </footer>
 
     <script type="module" src="popup.js"></script>

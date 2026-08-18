@@ -480,7 +480,14 @@ async function fillApproved() {
 document.getElementById("scan-btn").addEventListener("click", scan);
 document.getElementById("fill-btn").addEventListener("click", fillApproved);
 document.getElementById("open-options").addEventListener("click", () => chrome.runtime.openOptionsPage());
+document.getElementById("footer-settings").addEventListener("click", () => {
+  chrome.tabs.create({ url: chrome.runtime.getURL("src/options/options.html#settings") });
+});
 document.getElementById("popup-year").textContent = String(new Date().getFullYear());
+
+document.querySelectorAll("[data-icon]").forEach((el) => {
+  el.innerHTML = ICONS[el.dataset.icon] || "";
+});
 
 (async function initPopup() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });

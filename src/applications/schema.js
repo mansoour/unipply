@@ -28,6 +28,20 @@ export function statusLabel(value) {
   return STATUS_OPTIONS.find((s) => s.value === value)?.label || value;
 }
 
+// Which icon (from src/shared/icons.js) represents each status on the Home
+// dashboard's Overview stat cards. Coloring reuses the same data-status CSS
+// already applied to .status-badge elsewhere, so this is icon-shape only.
+export const STATUS_ICON_KEYS = {
+  not_started: "clock",
+  in_progress: "refreshCw",
+  submitted: "send",
+  interview: "users",
+  accepted: "checkCircle",
+  rejected: "xCircle",
+  waitlisted: "hourglass",
+  deferred: "hourglass",
+};
+
 function makeChecklist(labels) {
   return labels.map((label) => ({ id: crypto.randomUUID(), label, done: false }));
 }

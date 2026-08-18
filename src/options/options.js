@@ -9,7 +9,13 @@ import {
   exportBackup,
   importBackup,
 } from "../profile/storage.js";
-import { STATUS_OPTIONS, emptyApplication, statusLabel, computeApplicationProgress } from "../applications/schema.js";
+import {
+  STATUS_OPTIONS,
+  STATUS_ICON_KEYS,
+  emptyApplication,
+  statusLabel,
+  computeApplicationProgress,
+} from "../applications/schema.js";
 import { ICONS } from "../shared/icons.js";
 
 const GROUP_ICONS = {
@@ -34,6 +40,8 @@ function readInitialRoute() {
   if (match) {
     activeKey = "applications";
     focusApplicationId = decodeURIComponent(match[1]);
+  } else if (location.hash === "#settings") {
+    activeKey = "settings";
   }
 }
 
@@ -593,6 +601,31 @@ function renderSettingsPanel(container) {
   container.appendChild(actions);
 }
 
+function buildStatCard(iconKey, statusAttr, value, label) {
+  const card = document.createElement("div");
+  card.className = "stat-card";
+
+  const icon = document.createElement("span");
+  icon.className = "stat-icon";
+  if (statusAttr) icon.dataset.status = statusAttr;
+  icon.innerHTML = ICONS[iconKey] || "";
+  card.appendChild(icon);
+
+  const text = document.createElement("div");
+  text.className = "stat-text";
+  const valueEl = document.createElement("div");
+  valueEl.className = "stat-value";
+  valueEl.textContent = value;
+  const labelEl = document.createElement("div");
+  labelEl.className = "stat-label";
+  labelEl.textContent = label;
+  text.appendChild(valueEl);
+  text.appendChild(labelEl);
+  card.appendChild(text);
+
+  return card;
+}
+
 function renderHomePanel(container) {
   const hero = document.createElement("div");
   hero.className = "home-hero";
@@ -628,17 +661,11 @@ function renderHomePanel(container) {
   const statGrid = document.createElement("div");
   statGrid.className = "stat-grid";
 
-  const totalCard = document.createElement("div");
-  totalCard.className = "stat-card";
-  totalCard.innerHTML = `<div class="stat-value">${applications.length}</div><div class="stat-label">Total Applications</div>`;
-  statGrid.appendChild(totalCard);
+  statGrid.appendChild(buildStatCard("briefcase", "total", applications.length, "Total Applications"));
 
   for (const opt of STATUS_OPTIONS) {
     const count = applications.filter((a) => a.status === opt.value).length;
-    const card = document.createElement("div");
-    card.className = "stat-card";
-    card.innerHTML = `<div class="stat-value">${count}</div><div class="stat-label">${opt.label}</div>`;
-    statGrid.appendChild(card);
+    statGrid.appendChild(buildStatCard(STATUS_ICON_KEYS[opt.value], opt.value, count, opt.label));
   }
   container.appendChild(statGrid);
 
@@ -697,6 +724,7 @@ function renderHomePanel(container) {
 
 function renderPanel() {
   panel.innerHTML = "";
+  panel.classList.toggle("home-panel", activeKey === "home");
   if (activeKey === "home") {
     renderHomePanel(panel);
     return;
