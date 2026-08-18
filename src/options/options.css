@@ -580,14 +580,31 @@ button.add-entry {
   background: var(--bg-elevated);
 }
 
-.recent-app-row {
-  display: flex;
-  align-items: center;
+.recent-app-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
 
+@media (max-width: 700px) {
+  .recent-app-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.recent-app-grid .entry {
+  margin-bottom: 0;
+}
+
+.recent-app-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .recent-app-name {
-  flex: 0 0 150px;
+  flex: 1;
+  min-width: 0;
   font-size: 13px;
   font-weight: 600;
   overflow: hidden;
@@ -596,7 +613,7 @@ button.add-entry {
 }
 
 .recent-app-progress {
-  flex: 1;
+  flex: 0 0 80px;
 }
 
 .empty-state {

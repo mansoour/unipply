@@ -722,6 +722,7 @@ function renderHomePanel(container) {
   const recentTitle = document.createElement("h2");
   recentTitle.className = "home-section-title";
   recentTitle.textContent = "Recent Applications";
+  recentTitle.style.marginTop = "30px";
   mainCol.appendChild(recentTitle);
 
   if (applications.length === 0) {
@@ -734,6 +735,9 @@ function renderHomePanel(container) {
       .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
       .slice(0, 10);
 
+    const recentGrid = document.createElement("div");
+    recentGrid.className = "recent-app-grid";
+
     for (const app of recent) {
       const row = document.createElement("div");
       row.className = "entry recent-app-row";
@@ -743,20 +747,22 @@ function renderHomePanel(container) {
       name.textContent = app.school || "Untitled application";
       row.appendChild(name);
 
-      const badge = document.createElement("span");
-      badge.className = "status-badge";
-      badge.dataset.status = app.status;
-      badge.textContent = statusLabel(app.status);
-      row.appendChild(badge);
-
       const progressWrap = document.createElement("div");
       progressWrap.className = "recent-app-progress";
       const appPct = computeApplicationProgress(app);
       progressWrap.appendChild(renderProgressBar(appPct, `${appPct}%`, { compact: true }));
       row.appendChild(progressWrap);
 
-      mainCol.appendChild(row);
+      const badge = document.createElement("span");
+      badge.className = "status-badge";
+      badge.dataset.status = app.status;
+      badge.textContent = statusLabel(app.status);
+      row.appendChild(badge);
+
+      recentGrid.appendChild(row);
     }
+
+    mainCol.appendChild(recentGrid);
   }
 
   columns.appendChild(mainCol);
