@@ -129,11 +129,12 @@ function fieldInput(field, value, onChange) {
 }
 
 function renderEntryFields(group, entry, onFieldChange) {
-  const frag = document.createDocumentFragment();
+  const grid = document.createElement("div");
+  grid.className = "field-grid";
   for (const field of group.fields) {
-    frag.appendChild(fieldInput(field, entry[field.key], (val) => onFieldChange(field.key, val)));
+    grid.appendChild(fieldInput(field, entry[field.key], (val) => onFieldChange(field.key, val)));
   }
-  return frag;
+  return grid;
 }
 
 function onProfileFieldChange() {
@@ -148,12 +149,15 @@ function renderNonRepeatableGroup(group, container) {
 
   if (!profile[group.key]) profile[group.key] = {};
   const entry = profile[group.key];
-  container.appendChild(
+  const card = document.createElement("div");
+  card.className = "entry";
+  card.appendChild(
     renderEntryFields(group, entry, (key, val) => {
       entry[key] = val;
       onProfileFieldChange();
     })
   );
+  container.appendChild(card);
 }
 
 // Small chevron toggle that collapses/expands the entry card it's placed in
@@ -527,11 +531,22 @@ function renderSettingsPanel(container) {
   title.textContent = "Settings";
   container.appendChild(title);
 
+  // Gemini Settings card
+  const geminiCard = document.createElement("div");
+  geminiCard.className = "entry";
+
+  const geminiTitle = document.createElement("h3");
+  geminiTitle.textContent = "Gemini Settings";
+  geminiCard.appendChild(geminiTitle);
+
   const disclosure = document.createElement("p");
   disclosure.className = "disclosure";
   disclosure.textContent =
     "Your profile and API key stay on this device (chrome.storage.local). The only network calls Unipply makes are to the Gemini API, using the key below, when you scan a page or draft an essay.";
-  container.appendChild(disclosure);
+  geminiCard.appendChild(disclosure);
+
+  const fieldGrid = document.createElement("div");
+  fieldGrid.className = "field-grid";
 
   const apiKeyField = document.createElement("label");
   apiKeyField.className = "field";
@@ -546,7 +561,7 @@ function renderSettingsPanel(container) {
     scheduleSettingsSave();
   });
   apiKeyField.appendChild(apiKeyInput);
-  container.appendChild(apiKeyField);
+  fieldGrid.appendChild(apiKeyField);
 
   const modelField = document.createElement("label");
   modelField.className = "field";
@@ -560,19 +575,31 @@ function renderSettingsPanel(container) {
     scheduleSettingsSave();
   });
   modelField.appendChild(modelInput);
-  container.appendChild(modelField);
+  fieldGrid.appendChild(modelField);
+
+  geminiCard.appendChild(fieldGrid);
+
+  const apiKeyNote = document.createElement("p");
+  apiKeyNote.className = "field-note";
+  apiKeyNote.innerHTML =
+    'Don\'t have a key yet? Get one free from <a href="https://ai.google.dev/gemini-api/docs/api-key" target="_blank" rel="noopener">Google AI Studio</a> — sign in with your Google account, click "Create API key," and paste it above.';
+  geminiCard.appendChild(apiKeyNote);
+
+  container.appendChild(geminiCard);
+
+  // Backup card (separate from Gemini Settings)
+  const backupCard = document.createElement("div");
+  backupCard.className = "entry";
 
   const backupTitle = document.createElement("h3");
   backupTitle.textContent = "Backup";
-  backupTitle.style.marginBottom = "4px";
-  container.appendChild(backupTitle);
+  backupCard.appendChild(backupTitle);
 
   const backupNote = document.createElement("p");
   backupNote.className = "disclosure";
-  backupNote.style.marginBottom = "12px";
   backupNote.textContent =
     "Exports your profile and tracked applications as a JSON file — useful for moving to another device or keeping a personal backup. Your Gemini API key is never included; re-enter it after importing elsewhere.";
-  container.appendChild(backupNote);
+  backupCard.appendChild(backupNote);
 
   const actions = document.createElement("div");
   actions.className = "settings-actions";
@@ -598,7 +625,8 @@ function renderSettingsPanel(container) {
   importBtn.addEventListener("click", () => document.getElementById("import-profile").click());
   actions.appendChild(importBtn);
 
-  container.appendChild(actions);
+  backupCard.appendChild(actions);
+  container.appendChild(backupCard);
 }
 
 function buildStatCard(iconKey, statusAttr, value, label) {
@@ -650,13 +678,22 @@ function renderHomePanel(container) {
   meta.textContent = firstName ? `Welcome back, ${firstName} — ${dateText}` : dateText;
   container.appendChild(meta);
 
-  container.appendChild((() => {
-    const h2 = document.createElement("h2");
-    h2.textContent = "Overview";
-    h2.className = "home-section-title";
-    h2.style.marginTop = "0";
-    return h2;
-  })());
+  const profileTitle = document.createElement("h2");
+  profileTitle.className = "home-section-title";
+  profileTitle.style.marginTop = "0";
+  profileTitle.textContent = "Your Profile";
+  container.appendChild(profileTitle);
+
+  const profileCard = document.createElement("div");
+  profileCard.className = "profile-progress-card";
+  const pct = computeCompleteness(profile);
+  profileCard.appendChild(renderProgressBar(pct, `${pct}% complete`));
+  container.appendChild(profileCard);
+
+  const overviewTitle = document.createElement("h2");
+  overviewTitle.textContent = "Overview";
+  overviewTitle.className = "home-section-title";
+  container.appendChild(overviewTitle);
 
   const statGrid = document.createElement("div");
   statGrid.className = "stat-grid";
@@ -668,17 +705,6 @@ function renderHomePanel(container) {
     statGrid.appendChild(buildStatCard(STATUS_ICON_KEYS[opt.value], opt.value, count, opt.label));
   }
   container.appendChild(statGrid);
-
-  const profileTitle = document.createElement("h2");
-  profileTitle.className = "home-section-title";
-  profileTitle.textContent = "Your Profile";
-  container.appendChild(profileTitle);
-
-  const profileCard = document.createElement("div");
-  profileCard.className = "profile-progress-card";
-  const pct = computeCompleteness(profile);
-  profileCard.appendChild(renderProgressBar(pct, `${pct}% complete`));
-  container.appendChild(profileCard);
 
   const recentTitle = document.createElement("h2");
   recentTitle.className = "home-section-title";
@@ -699,7 +725,7 @@ function renderHomePanel(container) {
 
   for (const app of recent) {
     const row = document.createElement("div");
-    row.className = "recent-app-row";
+    row.className = "entry recent-app-row";
 
     const name = document.createElement("span");
     name.className = "recent-app-name";
@@ -792,8 +818,12 @@ function renderNav() {
   navList.appendChild(navButton("settings", "Settings", "settings"));
 }
 
+const LAUNCH_YEAR = 2026;
+
 async function init() {
-  document.getElementById("app-year").textContent = String(new Date().getFullYear());
+  const currentYear = new Date().getFullYear();
+  document.getElementById("app-year").textContent =
+    currentYear > LAUNCH_YEAR ? `${LAUNCH_YEAR}–${currentYear}` : String(LAUNCH_YEAR);
   readInitialRoute();
 
   profile = await getProfile();

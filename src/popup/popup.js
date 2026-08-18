@@ -483,7 +483,10 @@ document.getElementById("open-options").addEventListener("click", () => chrome.r
 document.getElementById("footer-settings").addEventListener("click", () => {
   chrome.tabs.create({ url: chrome.runtime.getURL("src/options/options.html#settings") });
 });
-document.getElementById("popup-year").textContent = String(new Date().getFullYear());
+const LAUNCH_YEAR = 2026;
+const currentYear = new Date().getFullYear();
+document.getElementById("popup-year").textContent =
+  currentYear > LAUNCH_YEAR ? `${LAUNCH_YEAR}–${currentYear}` : String(LAUNCH_YEAR);
 
 document.querySelectorAll("[data-icon]").forEach((el) => {
   el.innerHTML = ICONS[el.dataset.icon] || "";
