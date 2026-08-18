@@ -78,6 +78,9 @@ Residency group:
   qualifier some forms show as help text)
 - Whether you've lived outside that country in the last 3 years
 - Passport number, date of issue, date of expiry, place of issuance
+- "To which other UK Universities/Colleges will you apply?" — a competing-applications
+  disclosure question; could auto-suggest from your other tracked Applications entries instead of
+  making you retype school names.
 
 ### Tracking & status
 - Badge color coding by status (e.g. green = submitted/accepted, gray = not started) on the

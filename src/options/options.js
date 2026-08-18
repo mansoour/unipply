@@ -154,7 +154,7 @@ function collapseToggleButton(entryEl) {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "collapse-toggle";
-  btn.title = "Minimize";
+  btn.title = entryEl.classList.contains("collapsed") ? "Expand" : "Minimize";
   btn.innerHTML = ICONS.chevronDown;
   btn.addEventListener("click", () => {
     entryEl.classList.toggle("collapsed");
@@ -300,7 +300,7 @@ function renderChecklistSection(card, app, key, title, touch) {
 
 function renderApplicationCard(app, index, onRemove) {
   const card = document.createElement("div");
-  card.className = "entry";
+  card.className = "entry" + (app.status === "in_progress" ? "" : " collapsed");
   card.dataset.appId = app.id;
 
   const header = document.createElement("div");
@@ -494,6 +494,7 @@ function renderApplicationsPanel(container) {
   if (focusApplicationId) {
     const target = listEl.querySelector(`[data-app-id="${CSS.escape(focusApplicationId)}"]`);
     if (target) {
+      target.classList.remove("collapsed");
       target.scrollIntoView({ behavior: "smooth", block: "start" });
       target.classList.add("highlight");
       setTimeout(() => target.classList.remove("highlight"), 2000);
