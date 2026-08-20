@@ -74,16 +74,9 @@ main {
 }
 
 .popup-logo {
-  width: 22px;
-  height: 22px;
-  border-radius: 5px;
+  height: 24px;
+  width: auto;
   display: block;
-}
-
-h1 {
-  font-size: 15px;
-  margin: 0;
-  color: var(--accent);
 }
 
 .link-btn {
@@ -363,6 +356,23 @@ select,
   margin-top: 12px;
   padding-top: 10px;
   border-top: 1px solid var(--border);
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer-privacy-link {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.footer-privacy-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 .footer-settings-btn {
